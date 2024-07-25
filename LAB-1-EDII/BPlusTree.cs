@@ -110,7 +110,7 @@ public class BPlusTree
 
         if (foundNode == null)
         {
-            Console.WriteLine($"El ISBN {isbn} no está en el árbol.");
+            //Console.WriteLine($"El ISBN {isbn} no está en el árbol.");
             return;
         }
 
@@ -353,12 +353,13 @@ public class BPlusTree
     private void PrintNode(BNodo node, int level)
     {
         Console.WriteLine(new string(' ', level * 2) + string.Join(", ", node.Keys));
-
         if (!node.IsLeaf)
         {
+
             foreach (var child in node.Children)
             {
                 PrintNode(child, level + 1);
+                Console.WriteLine();
             }
         }
     }
