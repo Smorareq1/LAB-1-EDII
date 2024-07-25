@@ -10,7 +10,7 @@ public class BPlusTree
         this.t = t;
         root = new BNodo(true);
     }
-
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
     // Implement INSERT operation
     public void Insert(Book book)
     {
@@ -78,182 +78,292 @@ public class BPlusTree
             InsertNonFull(node.Children[i], book);
         }
     }
-
-    // Implement DELETE operation
-    public void Delete(string name)
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    // BORRAR
+    public void Delete(string isbn)
     {
-        Delete(root, name);
+        if (root == null)
+        {
+            Console.WriteLine("El árbol está vacío.");
+            return;
+        }
+
+        Delete(root, isbn);
+
         if (root.Keys.Count == 0)
         {
-            if (!root.IsLeaf)
+            if (root.IsLeaf)
+            {
+                root = null;
+            }
+            else
             {
                 root = root.Children[0];
             }
         }
     }
 
-    private void Delete(BNodo node, string name)
-    {
-        int idx = node.Keys.FindIndex(k => k == name);
 
-        if (idx != -1)
+    private void Delete(BNodo node, string isbn)
+    {
+        var (foundNode, idx) = SearchByIdIndex(node, isbn);
+
+        if (foundNode == null)
         {
-            if (node.IsLeaf)
+            Console.WriteLine($"El ISBN {isbn} no está en el árbol.");
+            return;
+        }
+
+        Console.WriteLine($"Delete: ISBN = {isbn}, Index = {idx}, Node Keys = {string.Join(", ", foundNode.Keys)}");
+
+        if (foundNode.IsLeaf)
+        {
+            foundNode.Keys.RemoveAt(idx);
+            foundNode.Values.RemoveAt(idx);
+        }
+        else
+        {
+            DeleteFromNonLeaf(foundNode, idx);
+        }
+
+        if (root.Keys.Count == 0)
+        {
+            if (root.IsLeaf)
             {
-                node.Keys.RemoveAt(idx);
-                node.Values.RemoveAt(idx);
+                root = null;
             }
             else
             {
-                BNodo predecessorNode = node.Children[idx];
-                if (predecessorNode.Keys.Count >= t)
-                {
-                    var predecessor = GetPredecessor(predecessorNode);
-                    node.Keys[idx] = predecessor.Name;
-                    node.Values[idx] = predecessor;
-                    Delete(predecessorNode, predecessor.Name);
-                }
-                else
-                {
-                    BNodo successorNode = node.Children[idx + 1];
-                    if (successorNode.Keys.Count >= t)
-                    {
-                        var successor = GetSuccessor(successorNode);
-                        node.Keys[idx] = successor.Name;
-                        node.Values[idx] = successor;
-                        Delete(successorNode, successor.Name);
-                    }
-                    else
-                    {
-                        Merge(node, idx);
-                        Delete(predecessorNode, name);
-                    }
-                }
+                root = root.Children[0];
             }
         }
-        else
+    }
+
+    
+    private (BNodo, int) SearchByIdIndex(BNodo node, string isbn)
+    {
+        if (node == null)
         {
-            int i = 0;
-            while (i < node.Keys.Count && string.Compare(name, node.Keys[i]) > 0)
+            return (null, -1);
+        }
+
+        for (int i = 0; i < node.Values.Count; i++)
+        {
+            if (node.Values[i].Isbn == isbn)
             {
-                i++;
+                return (node, i);
             }
-            if (node.Children[i].Keys.Count < t)
+        }
+
+        foreach (var child in node.Children)
+        {
+            var result = SearchByIdIndex(child, isbn);
+            if (result.Item1 != null)
             {
-                if (i > 0 && node.Children[i - 1].Keys.Count >= t)
+                return result;
+            }
+        }
+
+        return (null, -1);
+    }
+
+
+
+    private void DeleteFromNonLeaf(BNodo node, int idx)
+    {
+        string k = node.Keys[idx];
+
+        if (node.Children[idx].Keys.Count >= t)
+        {
+            string pred = GetPredecessor(node, idx);
+            node.Keys[idx] = pred;
+            Delete(node.Children[idx], pred);
+        }
+        else if (node.Children[idx + 1].Keys.Count >= t)
+        {
+            string succ = GetSuccessor(node, idx);
+            node.Keys[idx] = succ;
+            Delete(node.Children[idx + 1], succ);
+        }
+        else
+        {
+            Merge(node, idx);
+            Delete(node.Children[idx], k);
+        }
+    }
+    
+    private string GetPredecessor(BNodo node, int idx)
+    {
+        BNodo cur = node.Children[idx];
+        while (!cur.IsLeaf)
+        {
+            cur = cur.Children[cur.Keys.Count];
+        }
+        return cur.Keys[cur.Keys.Count - 1];
+    }
+    
+    private string GetSuccessor(BNodo node, int idx)
+    {
+        BNodo cur = node.Children[idx + 1];
+        while (!cur.IsLeaf)
+        {
+            cur = cur.Children[0];
+        }
+        return cur.Keys[0];
+    }
+    
+    private void Merge(BNodo node, int idx)
+    {
+        BNodo child = node.Children[idx];
+        BNodo sibling = node.Children[idx + 1];
+
+        child.Keys.Insert(t - 1, node.Keys[idx]);
+
+        for (int i = 0; i < sibling.Keys.Count; ++i)
+        {
+            child.Keys.Insert(i + t, sibling.Keys[i]);
+        }
+
+        if (!child.IsLeaf)
+        {
+            for (int i = 0; i <= sibling.Keys.Count; ++i)
+            {
+                child.Children.Insert(i + t, sibling.Children[i]);
+            }
+        }
+
+        for (int i = idx + 1; i < node.Keys.Count; ++i)
+        {
+            node.Keys[i - 1] = node.Keys[i];
+        }
+
+        for (int i = idx + 2; i <= node.Children.Count; ++i)
+        {
+            node.Children[i - 1] = node.Children[i];
+        }
+
+        node.Keys.RemoveAt(node.Keys.Count - 1);
+        node.Children.RemoveAt(node.Children.Count - 1);
+    }
+
+
+
+   
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    // PATCH
+    public void Patch(string isbn, Dictionary<string, string> updates)
+    {
+        var book = SearchById(root, isbn);
+        if (book != null)
+        {
+            foreach (var key in updates.Keys)
+            {
+                switch (key)
                 {
-                    BorrowFromPrev(node, i);
-                }
-                else if (i < node.Keys.Count && node.Children[i + 1].Keys.Count >= t)
-                {
-                    BorrowFromNext(node, i);
-                }
-                else
-                {
-                    if (i < node.Keys.Count)
-                    {
-                        Merge(node, i);
-                    }
-                    else
-                    {
-                        Merge(node, i - 1);
-                    }
+                    case "Author":
+                        book.Author = updates[key];
+                        break;
+                    case "Category":
+                        book.Category = updates[key];
+                        break;
+                    case "Price":
+                        book.Price = updates[key];
+                        break;
+                    case "Quantity":
+                        book.Quantity = updates[key];
+                        break;
                 }
             }
-            Delete(node.Children[i], name);
         }
     }
 
-    private Book GetPredecessor(BNodo node)
+    private Book SearchById(BNodo node, string isbn)
     {
-        while (!node.IsLeaf)
+        if (node == null)
         {
-            node = node.Children[node.Keys.Count];
+            return null;
         }
-        return node.Values[node.Values.Count - 1];
-    }
-
-    private Book GetSuccessor(BNodo node)
-    {
-        while (!node.IsLeaf)
+        foreach (var book in node.Values)
         {
-            node = node.Children[0];
+            if (book.Isbn == isbn)
+            {
+                return book;
+            }
         }
-        return node.Values[0];
-    }
-
-    private void Merge(BNodo node, int idx) 
-    {
-        var child = node.Children[idx];
-        var sibling = node.Children[idx + 1];
-
-        child.Keys.Add(node.Keys[idx]);
-        child.Keys.AddRange(sibling.Keys);
-        if (!child.IsLeaf)
+        foreach (var child in node.Children)
         {
-            child.Children.AddRange(sibling.Children);
+            var result = SearchById(child, isbn);
+            if (result != null)
+            {
+                return result;
+            }
         }
-        else
-        {
-            child.Values.AddRange(sibling.Values);
-            child.Next = sibling.Next;
-        }
-
-        node.Keys.RemoveAt(idx);
-        node.Children.RemoveAt(idx + 1);
-    }
-
-    private void BorrowFromPrev(BNodo node, int idx)
-    {
-        var child = node.Children[idx];
-        var sibling = node.Children[idx - 1];
-
-        child.Keys.Insert(0, node.Keys[idx - 1]);
-        if (!child.IsLeaf)
-        {
-            child.Children.Insert(0, sibling.Children[sibling.Children.Count - 1]);
-            sibling.Children.RemoveAt(sibling.Children.Count - 1);
-        }
-        else
-        {
-            child.Values.Insert(0, sibling.Values[sibling.Values.Count - 1]);
-            sibling.Values.RemoveAt(sibling.Values.Count - 1);
-        }
-        node.Keys[idx - 1] = sibling.Keys[sibling.Keys.Count - 1];
-        sibling.Keys.RemoveAt(sibling.Keys.Count - 1);
-    }
-
-    private void BorrowFromNext(BNodo node, int idx)
-    {
-        var child = node.Children[idx];
-        var sibling = node.Children[idx + 1];
-
-        child.Keys.Add(node.Keys[idx]);
-        if (!child.IsLeaf)
-        {
-            child.Children.Add(sibling.Children[0]);
-            sibling.Children.RemoveAt(0);
-        }
-        else
-        {
-            child.Values.Add(sibling.Values[0]);
-            sibling.Values.RemoveAt(0);
-        }
-        node.Keys[idx] = sibling.Keys[0];
-        sibling.Keys.RemoveAt(0);
+        return null;
     }
 
 
-    // Implement PATCH operation
-    public void Patch(string name, Dictionary<string, string> updates)
-    {
-        // Implementation of B+-Tree patch
-    }
-
-    // Implement SEARCH operation
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    // IBUSCAR POR NOMBRE
     public List<Book> SearchByName(string name)
     {
-        // Implementation of B+-Tree search
-        return new List<Book>();
+        var result = new List<Book>();
+        SearchByNameRecursive(root, name, result);
+        
+        return result;
     }
+
+    private void SearchByNameRecursive(BNodo node, string name, List<Book> result)
+    {
+        if (node == null)
+        {
+            return;
+        }
+        for (int i = 0; i < node.Keys.Count; i++)
+        {
+            if (node.Keys[i].Contains(name))
+            {
+                result.Add(node.Values[i]);
+            }
+        }
+        foreach (var child in node.Children)
+        {
+            SearchByNameRecursive(child, name, result);
+        }
+    }
+
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    public void PrintSearchResults(List<Book> books)
+    {
+        foreach (var book in books)
+        {
+            Console.WriteLine($"ISBN: {book.Isbn}, Name: {book.Name}, Author: {book.Author}, Category: {book.Category}, Price: {book.Price}, Quantity: {book.Quantity}");
+        }
+
+        if (books.Count == 0)
+        {
+            Console.WriteLine("No se encontro el libro");
+        }
+    }
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    public void PrintTree()
+    {
+        PrintNode(root, 0);
+    }
+
+    private void PrintNode(BNodo node, int level)
+    {
+        Console.WriteLine(new string(' ', level * 2) + string.Join(", ", node.Keys));
+
+        if (!node.IsLeaf)
+        {
+            foreach (var child in node.Children)
+            {
+                PrintNode(child, level + 1);
+            }
+        }
+    }
+
+
 }
