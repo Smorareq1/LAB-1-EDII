@@ -114,8 +114,6 @@ public class BPlusTree
             return;
         }
 
-        Console.WriteLine($"Delete: ISBN = {isbn}, Index = {idx}, Node Keys = {string.Join(", ", foundNode.Keys)}");
-
         if (foundNode.IsLeaf)
         {
             foundNode.Keys.RemoveAt(idx);
