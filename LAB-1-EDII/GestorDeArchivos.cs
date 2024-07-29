@@ -32,14 +32,10 @@ public class GestorDeArchivos
             }
             else if (line.Contains("PATCH;"))
             {
-                var patchData = JsonConvert.DeserializeObject<Dictionary<string, string>>(part);
-                if (patchData.ContainsKey("isbn"))
-                {
-                    var isbn = patchData["isbn"];
-                    patchData.Remove("isbn");
-                    tree.Patch(isbn, patchData);
-                }
+                var patchData = JsonConvert.DeserializeObject<Dictionary<string, object>>(part);
+                tree.UpdateBookFromPatchData(patchData);
             }
+
             else if (line.Contains("DELETE;"))
             {
                 var deleteData = JsonConvert.DeserializeObject<Dictionary<string, string>>(part);

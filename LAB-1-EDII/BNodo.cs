@@ -2,14 +2,15 @@
 
 public class BNodo
 {
-    public List<string> Keys { get; set; } = new List<string>();
-    public List<BNodo> Children { get; set; } = new List<BNodo>();
-    public List<Book> Values { get; set; } = new List<Book>();
-    public BNodo Next { get; set; }
-    public bool IsLeaf { get; set; } = true;
+    public List<Book> Books { get; private set; }
+    public List<BNodo> Children { get; private set; }
+    public bool IsLeaf => Children.Count == 0;
+    public int Degree { get; private set; }
 
-    public BNodo(bool isLeaf)
+    public BNodo(int degree)
     {
-        IsLeaf = isLeaf;
+        Degree = degree;
+        Books = new List<Book>();
+        Children = new List<BNodo>();
     }
 }
