@@ -14,7 +14,7 @@ class Program
             BPlusTree tree = new BPlusTree(5);
             GestorDeArchivos gestorPrincipal = new GestorDeArchivos(tree);
 
-            string filepath = "C:\\Users\\smora\\Downloads\\Csv\\logfile.csv";
+            string filepath = "C:\\Users\\smora\\Downloads\\archivosProcesados.csv";
 
             // Verificar si el archivo existe
             if (!System.IO.File.Exists(filepath))
@@ -29,8 +29,8 @@ class Program
             tree.PrintTree();
 
             // Example usage: Search for a book by name and print results
-            var searchResults = tree.SearchByName("Cien Años de Soledad");
-            Console.WriteLine("Resultados de la búsqueda:");
+            var searchResults = tree.SearchByName("rLf XhSfdpc");
+            Console.WriteLine("Resultados de la búsqueda de ejemplo:");
             tree.PrintSearchResults(searchResults);
         }
         catch (Exception ex)

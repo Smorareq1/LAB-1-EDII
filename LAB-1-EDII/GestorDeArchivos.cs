@@ -5,6 +5,7 @@ using Newtonsoft.Json;
 public class GestorDeArchivos
 {
     private BPlusTree tree;
+    private List<Book> searchResults = new List<Book>();
 
     public GestorDeArchivos(BPlusTree tree)
     {
@@ -18,11 +19,21 @@ public class GestorDeArchivos
         {
             ProcessLine(line);
         }
+        
+        Console.WriteLine("Resultados de busquedas: ");
+        if (searchResults.Count != 0)
+        {
+            tree.PrintSearchResults(searchResults);
+        }
+        else
+        {
+            Console.WriteLine("No se encontraron resultados.");
+        }
     }
 
     private void ProcessLine(string line)
     {
-        var parts = line.Split(new[] { "INSERT;", "PATCH;", "DELETE;" }, StringSplitOptions.RemoveEmptyEntries);
+        var parts = line.Split(new[] { "INSERT;", "PATCH;", "DELETE;", "SEARCH;" }, StringSplitOptions.RemoveEmptyEntries);
         foreach (var part in parts)
         {
             if (line.Contains("INSERT;"))
@@ -43,6 +54,16 @@ public class GestorDeArchivos
                 {
                     tree.Delete(deleteData["isbn"]);
                 }
+            }
+
+            else if (line.Contains("SEARCH;"))
+            {
+                var searchData = JsonConvert.DeserializeObject<Dictionary<string, string>>(part);
+                if (searchData.ContainsKey("isbn"))
+                {
+                    searchResults.Add(tree.SearchByIsbn(searchData["isbn"]));
+                }
+                
             }
         }
     }
