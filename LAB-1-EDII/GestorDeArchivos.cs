@@ -59,9 +59,14 @@ public class GestorDeArchivos
             else if (line.Contains("SEARCH;"))
             {
                 var searchData = JsonConvert.DeserializeObject<Dictionary<string, string>>(part);
+
                 if (searchData.ContainsKey("isbn"))
                 {
                     searchResults.Add(tree.SearchByIsbn(searchData["isbn"]));
+                }
+                else if(searchData.ContainsKey("name"))
+                {
+                    searchResults.AddRange(tree.SearchByName(searchData["name"]));
                 }
                 
             }
