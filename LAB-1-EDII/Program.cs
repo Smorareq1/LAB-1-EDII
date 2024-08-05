@@ -6,7 +6,7 @@ class Program
     {
         try
         {
-            BPlusTree tree = new BPlusTree(5);
+            ArbolB tree = new ArbolB(5);
             GestorDeArchivos gestorPrincipal = new GestorDeArchivos(tree);
 
             //C:\Users\smora\Downloads\lab01_books.csv - C:\Users\smora\Downloads\lab01_search.csv

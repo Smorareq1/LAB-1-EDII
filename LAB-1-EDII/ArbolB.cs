@@ -1,13 +1,13 @@
 ﻿
 namespace LAB_1_EDII;
-public class BPlusTree
+public class ArbolB
     {
        private readonly int _degree;
         private readonly int _minKeys;
         private readonly int _maxKeys;
         private BNodo _root;
 
-        public BPlusTree(int degree)
+        public ArbolB(int degree)
         {
             _degree = degree;
             _minKeys = (degree + 1) / 2 - 1;

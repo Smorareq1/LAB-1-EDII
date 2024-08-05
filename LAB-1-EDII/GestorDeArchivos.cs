@@ -4,10 +4,10 @@ using Newtonsoft.Json;
 
 public class GestorDeArchivos
 {
-    private BPlusTree tree;
+    private ArbolB tree;
     private List<Book> searchResults = new List<Book>();
 
-    public GestorDeArchivos(BPlusTree tree)
+    public GestorDeArchivos(ArbolB tree)
     {
         this.tree = tree;
     }
