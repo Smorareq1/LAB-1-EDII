@@ -50,6 +50,7 @@ public class GestorDeArchivos
             else if (line.Contains("DELETE;"))
             {
                 var deleteData = JsonConvert.DeserializeObject<Dictionary<string, string>>(part);
+                
                 if (deleteData.ContainsKey("isbn"))
                 {
                     tree.Delete(deleteData["isbn"]);

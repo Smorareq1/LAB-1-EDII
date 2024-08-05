@@ -14,7 +14,8 @@ class Program
             BPlusTree tree = new BPlusTree(5);
             GestorDeArchivos gestorPrincipal = new GestorDeArchivos(tree);
 
-            string filepath = "C:\\Users\\smora\\Downloads\\csv\\logfile.csv";
+            //datos_10000
+            string filepath = "C:\\Users\\smora\\Downloads\\lab01_books.csv";
 
             // Verificar si el archivo existe
             if (!System.IO.File.Exists(filepath))
