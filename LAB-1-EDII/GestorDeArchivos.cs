@@ -20,15 +20,6 @@ public class GestorDeArchivos
             ProcessLine(line);
         }
         
-        Console.WriteLine("Resultados de busquedas: ");
-        if (searchResults.Count != 0)
-        {
-            tree.PrintSearchResults(searchResults);
-        }
-        else
-        {
-            Console.WriteLine("No se encontraron resultados.");
-        }
     }
 
     private void ProcessLine(string line)
@@ -71,6 +62,19 @@ public class GestorDeArchivos
                 }
                 
             }
+        }
+    }
+
+    public void PrintSearchResults()
+    {
+        Console.WriteLine("\n \n \n \n Resultados de busquedas: ");
+        if (searchResults.Count != 0)
+        {
+            tree.PrintSearchResults(searchResults);
+        }
+        else
+        {
+            Console.WriteLine("No se encontraron resultados.");
         }
     }
 }

@@ -4,35 +4,28 @@ class Program
 {
     static void Main(string[] args)
     {
-        pruebasJson();
-    }
-
-    private static void pruebasJson()
-    {
         try
         {
             BPlusTree tree = new BPlusTree(5);
             GestorDeArchivos gestorPrincipal = new GestorDeArchivos(tree);
 
-            //datos_10000
-            string filepath = "C:\\Users\\smora\\Downloads\\lab01_books.csv";
+            //C:\Users\smora\Downloads\lab01_books.csv - C:\Users\smora\Downloads\lab01_search.csv
+            Console.WriteLine("Ingrese la ruta del archivo: ");
+            string filepath = Console.ReadLine();
+            Console.WriteLine("Ingrese el archivo de busqueda: ");
+            string searchFile = Console.ReadLine();
 
             // Verificar si el archivo existe
-            if (!System.IO.File.Exists(filepath))
+            if (!System.IO.File.Exists(filepath) || !System.IO.File.Exists(searchFile))
             {
-                Console.WriteLine($"El archivo {filepath} no existe.");
+                Console.WriteLine($"El archivo {filepath} o {searchFile} no existe.");
                 return;
             }
 
             gestorPrincipal.ProcessLogFile(filepath);
-
-            //Console.WriteLine("Árbol completo: ");
-            //tree.PrintTree();
-
-            // Example usage: Search for a book by name and print results
-            //var searchResults = tree.SearchByName("rLf XhSfdpc");
-            //Console.WriteLine("Resultados de la búsqueda de ejemplo:");
-            //tree.PrintSearchResults(searchResults);
+            gestorPrincipal.ProcessLogFile(searchFile);
+            gestorPrincipal.PrintSearchResults();
+            
         }
         catch (Exception ex)
         {
@@ -41,5 +34,5 @@ class Program
 
         Console.ReadLine();
     }
-    
 }
+

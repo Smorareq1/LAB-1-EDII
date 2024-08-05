@@ -200,164 +200,191 @@ public class BPlusTree
 
         //Antes de editar
         public void Delete(string isbn)
-        {
-            Delete(_root, isbn);
+    {
+        Delete(_root, isbn);
 
-            // Si la raíz queda vacía, debe ser reemplazada por su primer hijo si no es una hoja
-            if (_root.Books.Count == 0 && !_root.IsLeaf)
-            {
-                _root = _root.Children[0];
-            }
+        // If the root node is empty, replace it with its first child if not a leaf
+        if (_root.Books.Count == 0 && !_root.IsLeaf)
+        {
+            _root = _root.Children[0];
         }
+    }
 
-        private void Delete(BNodo node, string isbn)
+    private void Delete(BNodo node, string isbn)
+    {
+        int idx = FindIndex(node, isbn);
+
+        // Check if the book is in the current node
+        if (idx < node.Books.Count && node.Books[idx].Isbn == isbn)
         {
-            int idx = FindIndex(node, isbn);
-            
-            if (idx >= node.Books.Count || node.Books[idx].Isbn != isbn)
-            {
-                // El libro no existe en el nodo actual, retornar
-                Console.WriteLine("El libro no se encontró en el nodo.");
-                return;
-            }
-
             if (node.IsLeaf)
             {
-                if (idx < node.Books.Count && node.Books[idx].Isbn == isbn)
-                {
-                    node.Books.RemoveAt(idx);
-                }
-                else
-                {
-                    Console.WriteLine("El libro no se encontró en el nodo hoja.");
-                }
+                // Case 1: Node is a leaf, simply remove the book
+                node.Books.RemoveAt(idx);
             }
             else
             {
-                if (idx < node.Books.Count && node.Books[idx].Isbn == isbn)
+                // Case 2: Node is an internal node
+                if (node.Children[idx].Books.Count >= _degree)
                 {
-                    if (node.Children[idx].Books.Count >= _degree)
-                    {
-                        var pred = GetPredecessor(node, idx);
-                        node.Books[idx] = pred;
-                        Delete(node.Children[idx], pred.Isbn);
-                    }
-                    else if (node.Children[idx + 1].Books.Count >= _degree)
-                    {
-                        var succ = GetSuccessor(node, idx);
-                        node.Books[idx] = succ;
-                        Delete(node.Children[idx + 1], succ.Isbn);
-                    }
-                    else
-                    {
-                        MergeChildren(node, idx);
-                        Delete(node.Children[idx], isbn);
-                    }
+                    // Case 2a: Predecessor in the left child has at least degree books
+                    var pred = GetPredecessor(node, idx);
+                    node.Books[idx] = pred;
+                    Delete(node.Children[idx], pred.Isbn);
+                }
+                else if (node.Children[idx + 1].Books.Count >= _degree)
+                {
+                    // Case 2b: Successor in the right child has at least degree books
+                    var succ = GetSuccessor(node, idx);
+                    node.Books[idx] = succ;
+                    Delete(node.Children[idx + 1], succ.Isbn);
                 }
                 else
                 {
-                    var childIndex = idx < node.Books.Count ? idx : idx + 1;
-                    if (node.Children[childIndex].Books.Count == _degree - 1)
-                    {
-                        if (childIndex > 0 && node.Children[childIndex - 1].Books.Count >= _degree)
-                        {
-                            BorrowFromPrev(node, childIndex);
-                        }
-                        else if (childIndex < node.Children.Count - 1 && node.Children[childIndex + 1].Books.Count >= _degree)
-                        {
-                            BorrowFromNext(node, childIndex);
-                        }
-                        else
-                        {
-                            if (childIndex == node.Children.Count - 1)
-                            {
-                                childIndex--;
-                            }
-                            MergeChildren(node, childIndex);
-                        }
-                    }
-                    Delete(node.Children[childIndex], isbn);
+                    // Case 2c: Both children have degree-1 books, merge them
+                    MergeChildren(node, idx);
+                    Delete(node.Children[idx], isbn);
                 }
             }
         }
-        
-        private int FindIndex(BNodo node, string isbn)
+        else
         {
-            int idx = 0;
-            while (idx < node.Books.Count && string.Compare(isbn, node.Books[idx].Isbn) > 0)
+            // Book is not in this node
+            if (node.IsLeaf)
             {
-                idx++;
-            }
-            return idx;
-        }
-        
-        private Book GetPredecessor(BNodo node, int idx)
-        {
-            var current = node.Children[idx];
-            while (!current.IsLeaf)
-            {
-                current = current.Children[current.Children.Count - 1];
-            }
-            return current.Books[current.Books.Count - 1];
-        }
-        
-        private Book GetSuccessor(BNodo node, int idx)
-        {
-            var current = node.Children[idx + 1];
-            while (!current.IsLeaf)
-            {
-                current = current.Children[0];
-            }
-            return current.Books[0];
-        }
-        
-        private void MergeChildren(BNodo node, int idx)
-        {
-            var child = node.Children[idx];
-            var sibling = node.Children[idx + 1];
-
-            child.Books.Add(node.Books[idx]);
-            child.Books.AddRange(sibling.Books);
-            if (!child.IsLeaf)
-            {
-                child.Children.AddRange(sibling.Children);
+                Console.WriteLine("El libro no se encontró en el nodo hoja.");
+                return;
             }
 
-            node.Books.RemoveAt(idx);
-            node.Children.RemoveAt(idx + 1);
-        }
-        
-        private void BorrowFromPrev(BNodo node, int idx)
-        {
-            var child = node.Children[idx];
-            var sibling = node.Children[idx - 1];
-
-            child.Books.Insert(0, node.Books[idx - 1]);
-            node.Books[idx - 1] = sibling.Books[sibling.Books.Count - 1];
-
-            if (!child.IsLeaf)
+            // Determine the index of the child that holds the key
+            bool flag = (idx == node.Books.Count);
+            if (node.Children[idx].Books.Count == _degree - 1)
             {
-                child.Children.Insert(0, sibling.Children[sibling.Children.Count - 1]);
-                sibling.Children.RemoveAt(sibling.Children.Count - 1);
+                // If the child is full, fix the node
+                if (idx != 0 && node.Children[idx - 1].Books.Count >= _degree)
+                {
+                    BorrowFromPrev(node, idx);
+                }
+                else if (idx != node.Books.Count && node.Children[idx + 1].Books.Count >= _degree)
+                {
+                    BorrowFromNext(node, idx);
+                }
+                else
+                {
+                    if (idx != node.Books.Count)
+                    {
+                        MergeChildren(node, idx);
+                    }
+                    else
+                    {
+                        MergeChildren(node, idx - 1);
+                    }
+                }
             }
-            sibling.Books.RemoveAt(sibling.Books.Count - 1);
-        }
-        
-        private void BorrowFromNext(BNodo node, int idx)
-        {
-            var child = node.Children[idx];
-            var sibling = node.Children[idx + 1];
 
-            child.Books.Add(node.Books[idx]);
-            node.Books[idx] = sibling.Books[0];
-
-            if (!child.IsLeaf)
+            // Move to the next level
+            if (flag && idx > node.Books.Count)
             {
-                child.Children.Add(sibling.Children[0]);
-                sibling.Children.RemoveAt(0);
+                Delete(node.Children[idx - 1], isbn);
             }
-            sibling.Books.RemoveAt(0);
+            else
+            {
+                Delete(node.Children[idx], isbn);
+            }
         }
+    }
+
+    private int FindIndex(BNodo node, string isbn)
+    {
+        int idx = 0;
+        while (idx < node.Books.Count && string.Compare(isbn, node.Books[idx].Isbn) > 0)
+        {
+            idx++;
+        }
+        return idx;
+    }
+
+    private Book GetPredecessor(BNodo node, int idx)
+    {
+        var current = node.Children[idx];
+        while (!current.IsLeaf)
+        {
+            current = current.Children[current.Children.Count - 1];
+        }
+        return current.Books[current.Books.Count - 1];
+    }
+
+    private Book GetSuccessor(BNodo node, int idx)
+    {
+        var current = node.Children[idx + 1];
+        while (!current.IsLeaf)
+        {
+            current = current.Children[0];
+        }
+        return current.Books[0];
+    }
+
+    private void MergeChildren(BNodo node, int idx)
+    {
+        var child = node.Children[idx];
+        var sibling = node.Children[idx + 1];
+
+        // Merge the book from the node into the left child
+        child.Books.Add(node.Books[idx]);
+
+        // Append sibling's books and children to the child
+        child.Books.AddRange(sibling.Books);
+        if (!child.IsLeaf)
+        {
+            child.Children.AddRange(sibling.Children);
+        }
+
+        // Remove the book and the right child from the node
+        node.Books.RemoveAt(idx);
+        node.Children.RemoveAt(idx + 1);
+    }
+
+    private void BorrowFromPrev(BNodo node, int idx)
+    {
+        var child = node.Children[idx];
+        var sibling = node.Children[idx - 1];
+
+        // Move separator book from node to the front of child
+        child.Books.Insert(0, node.Books[idx - 1]);
+
+        // Move sibling's last book to the node
+        node.Books[idx - 1] = sibling.Books[sibling.Books.Count - 1];
+
+        // Move sibling's last child to the front of child's children
+        if (!child.IsLeaf)
+        {
+            child.Children.Insert(0, sibling.Children[sibling.Children.Count - 1]);
+            sibling.Children.RemoveAt(sibling.Children.Count - 1);
+        }
+
+        sibling.Books.RemoveAt(sibling.Books.Count - 1);
+    }
+
+    private void BorrowFromNext(BNodo node, int idx)
+    {
+        var child = node.Children[idx];
+        var sibling = node.Children[idx + 1];
+
+        // Move separator book from node to the end of child
+        child.Books.Add(node.Books[idx]);
+
+        // Move sibling's first book to the node
+        node.Books[idx] = sibling.Books[0];
+
+        // Move sibling's first child to the end of child's children
+        if (!child.IsLeaf)
+        {
+            child.Children.Add(sibling.Children[0]);
+            sibling.Children.RemoveAt(0);
+        }
+
+        sibling.Books.RemoveAt(0);
+    }
 
         /////////////////////
         public void UpdateBookFromPatchData(Dictionary<string, object> patchData)
