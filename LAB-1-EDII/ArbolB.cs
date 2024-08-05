@@ -252,7 +252,7 @@ public class ArbolB
             // Book is not in this node
             if (node.IsLeaf)
             {
-                Console.WriteLine("El libro no se encontró en el nodo hoja.");
+                //Console.WriteLine("El libro no se encontró en el nodo hoja.");
                 return;
             }
 
@@ -427,10 +427,6 @@ public class ArbolB
                     // Imprimir el libro editado
                     ImprimirLibroEditado(book);
                 }
-                else
-                {
-                    Console.WriteLine("Libro no encontrado.");
-                }
             }
             else
             {
@@ -441,7 +437,7 @@ public class ArbolB
         
         private void ImprimirLibroEditado(Book book)
         {
-            Console.WriteLine($"ISBN: {book.Isbn}, Nombre: {book.Name}, Autor: {book.Author}, Categoría: {book.Category}, Precio: {book.Price}, Cantidad: {book.Quantity}");
+            Console.WriteLine( "Libro editado correctamente: " + $"ISBN: {book.Isbn}, Nombre: {book.Name}, Autor: {book.Author}, Categoría: {book.Category}, Precio: {book.Price}, Cantidad: {book.Quantity}");
         }
         
         
