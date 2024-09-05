@@ -9,7 +9,7 @@ class Program
             ArbolB tree = new ArbolB(5);
             GestorDeArchivos gestorPrincipal = new GestorDeArchivos(tree);
 
-            //C:\Users\smora\Downloads\lab01_books.csv - C:\Users\smora\Downloads\lab01_search.csv
+            //C:\Users\smora\Downloads\lab01_books.csv - C:\Users\smora\Downloads\lab01_search.csv - C:\Users\smora\Downloads\lab01_books_100k_comma_separated.csv - C:\Users\smora\Downloads\lab01_search_100k.csv
             
             Console.WriteLine("Ingrese la ruta del archivo: ");
             string filepath = Console.ReadLine();
