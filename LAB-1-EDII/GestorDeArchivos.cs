@@ -1,80 +1,94 @@
 ﻿namespace LAB_1_EDII;
 
+using System.Text;
 using Newtonsoft.Json;
 
 public class GestorDeArchivos
 {
     private ArbolB tree;
-    private List<Book> searchResults = new List<Book>();
-
     public GestorDeArchivos(ArbolB tree)
     {
         this.tree = tree;
     }
+    
+    //////////////// ARCHIVO PARA INSERTAR ////////////////////
 
-    public void ProcessLogFile(string filePath)
+    public void ProcesarArchivoInsertar(string filePath)
     {
         var lines = File.ReadAllLines(filePath);
         foreach (var line in lines)
         {
-            ProcessLine(line);
+            ProcesarLineaInsertar(line);
         }
-        
     }
-
-    private void ProcessLine(string line)
+    
+    private void ProcesarLineaInsertar(string linea)
     {
-        var parts = line.Split(new[] { "INSERT;", "PATCH;", "DELETE;", "SEARCH;" }, StringSplitOptions.RemoveEmptyEntries);
-        foreach (var part in parts)
+        if (linea.StartsWith("INSERT;"))
         {
-            if (line.Contains("INSERT;"))
+            var part = linea.Replace("INSERT;", "").Trim();
+            var book = JsonConvert.DeserializeObject<Book>(part);
+
+            if (book == null || string.IsNullOrEmpty(book.Name) || string.IsNullOrEmpty(book.Isbn))
             {
-                var book = JsonConvert.DeserializeObject<Book>(part);
-                tree.Insert(book);
-            }
-            else if (line.Contains("PATCH;"))
-            {
-                var patchData = JsonConvert.DeserializeObject<Dictionary<string, object>>(part);
-                tree.UpdateBookFromPatchData(patchData);
+                //Console.WriteLine("Error: Libro deserializado es nulo o tiene datos incompletos.");
+                return;
             }
 
-            else if (line.Contains("DELETE;"))
-            {
-                var deleteData = JsonConvert.DeserializeObject<Dictionary<string, string>>(part);
-                
-                if (deleteData.ContainsKey("isbn"))
-                {
-                    tree.Delete(deleteData["isbn"]);
-                }
-            }
+            // Insert into dictionaries
+            tree.Insert(book);
+        }
+        else if (linea.StartsWith("PATCH;"))
+        {
+            var part = linea.Replace("PATCH;", "").Trim();
+            var patchData = JsonConvert.DeserializeObject<Dictionary<string, object>>(part);
 
-            else if (line.Contains("SEARCH;"))
-            {
-                var searchData = JsonConvert.DeserializeObject<Dictionary<string, string>>(part);
+            tree.UpdateBookFromPatchData(patchData);
+            
+        }
+        else if (linea.StartsWith("DELETE;"))
+        {
+            var part = linea.Replace("DELETE;", "").Trim();
+            var deleteData = JsonConvert.DeserializeObject<Dictionary<string, string>>(part);
 
-                if (searchData.ContainsKey("isbn"))
-                {
-                    searchResults.Add(tree.SearchByIsbn(searchData["isbn"]));
-                }
-                else if(searchData.ContainsKey("name"))
-                {
-                    searchResults.AddRange(tree.SearchByName(searchData["name"]));
-                }
-                
-            }
+            
+            var isbn = deleteData["isbn"];
+            tree.Delete(isbn);
+            
         }
     }
-
-    public void PrintSearchResults()
+    
+    //////////////// ARCHIVO PARA BUSCAR ////////////////////
+    public void ProcesarArchivoBusqueda(string filePath, string outputFilePath)
     {
-        Console.WriteLine("\n \n \n \n Resultados de busquedas: ");
-        if (searchResults.Count != 0)
+        var lines = File.ReadAllLines(filePath);
+
+        // Ensure the output TXT file is created and ready for writing
+        using (var writer = new StreamWriter(outputFilePath))
         {
-            tree.PrintSearchResults(searchResults);
-        }
-        else
-        {
-            Console.WriteLine("No se encontraron resultados.");
+            foreach (var line in lines)
+            {
+                ProcesarLineaBusqueda(line, writer);
+            }
         }
     }
+
+    private void ProcesarLineaBusqueda(string linea, StreamWriter writer)
+    {
+        if (linea.StartsWith("SEARCH;"))
+        {
+            var part = linea.Replace("SEARCH;", "").Trim();
+            var searchData = JsonConvert.DeserializeObject<Dictionary<string, string>>(part);
+
+            if (searchData.ContainsKey("name"))
+            {
+                var name = searchData["name"];
+                tree.BuscarPorNombre(name, writer);
+            }
+        }
+    }
+
+    
+    
+    
 }
