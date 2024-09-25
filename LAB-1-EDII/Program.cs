@@ -11,8 +11,6 @@ class Program
             ArbolB tree = new ArbolB(30);
             GestorDeArchivos gestorPrincipal = new GestorDeArchivos(tree);
             
-            string archivoResultados = "C:\\Users\\smora\\Downloads\\resultados_busquedas.txt";
-            
             Console.WriteLine("Ingrese la ruta del archivo: ");
             string filepath = Console.ReadLine();
             Console.WriteLine("Ingrese el archivo de busqueda: ");
@@ -25,10 +23,30 @@ class Program
                 return;
             }
 
-            gestorPrincipal.ProcesarArchivoInsertar(filepath);
-            Console.WriteLine("Procesando archivo de busqueda");
-            gestorPrincipal.ProcesarArchivoBusqueda(searchFile, archivoResultados);
-            Console.WriteLine("Archivo de salida genrado en descargas con el nombre de resultados_busquedas.txt");
+            try
+            {
+                    // Crear la ruta del archivo de resultados en la misma carpeta que el archivo de inserción
+                    string carpetaResultados = System.IO.Path.GetDirectoryName(filepath);
+                    string archivoResultados = System.IO.Path.Combine(carpetaResultados, "resultados.txt");
+                    // Crear el archivo de resultados si no existe
+                    if (!System.IO.File.Exists(archivoResultados))
+                    {
+                        System.IO.File.Create(archivoResultados).Close();
+                    }
+
+                    
+                    Console.WriteLine("Procesando archivos...");
+                    gestorPrincipal.ProcesarArchivoInsertar(filepath);
+                    Console.WriteLine("Procesando archivo de busqueda");
+                    gestorPrincipal.ProcesarArchivoBusqueda(searchFile, archivoResultados);
+                    Console.WriteLine($"Archivo de salida generado en {archivoResultados}");
+                    Console.WriteLine("Listo :) ");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
             
         }
         catch (Exception ex)
